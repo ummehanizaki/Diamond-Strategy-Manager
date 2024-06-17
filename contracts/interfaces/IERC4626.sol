@@ -27,4 +27,6 @@ interface IERC4626 {
   function previewMint(uint256 shares) external view returns (uint256 assets); // Simulates mint to see required assets
   function previewWithdraw(uint256 shares) external view returns (uint256 assets); // Simulates withdrawal to see received assets
   function previewRedeem(uint256 shares) external view returns (uint256 assets); // Simulates redeem to see received assets
+  function maxWithdraw(address owner) external view returns (uint256);
+
 }

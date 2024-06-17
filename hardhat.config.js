@@ -29,15 +29,16 @@ module.exports = {
         url: SEPOLIA_API_KEY_URL,
         accounts:[PRIVATE_KEY],
         enabled: true,
-        chainId: 12345
+        chainId: 12345,
+        blockNumber: 6104924
       }
     },
-    sepolia: {
-      url: SEPOLIA_API_KEY_URL,
-      accounts: [PRIVATE_KEY],
-      apiKey: process.env.ETHERSCAN_API_KEY
+    // sepolia: {
+    //   url: SEPOLIA_API_KEY_URL,
+    //   accounts: [PRIVATE_KEY],
+    //   apiKey: process.env.ETHERSCAN_API_KEY
 
-    },  
+    // },  
   },
   etherscan: {
     apiKey: {

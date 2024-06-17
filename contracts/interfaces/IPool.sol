@@ -14,4 +14,7 @@ interface IPool {
         uint256 amount,
         address to
     ) external;
+
+    function balanceOf(address owner) external view returns (uint256);
+
 }

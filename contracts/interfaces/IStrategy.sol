@@ -7,4 +7,6 @@ interface IStrategy {
     function deposit(address user) external payable;
     function withdraw(address user, uint256 amount) external;
     function balance(address user) external view returns (uint256);
+    function vaultToken() external view returns (address);
+
 }

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import "../interfaces/IStrategy.sol";
+import "../interfaces/IERC4626.sol";
 
 
 contract StrategyManager {
@@ -44,7 +45,6 @@ contract StrategyManager {
         emit StrategyAdded(_strategyName, _strategyAddress);
     }
 
-    // Function to add a new strategy contract
     function removeStrategy(
         string memory _strategyName
     ) external onlyOwner {
@@ -63,7 +63,8 @@ contract StrategyManager {
     }
 
     // Function to deposit funds into a strategy
-    function deposit(string memory _strategyName) external payable {
+    function deposit(string memory _strategyName, uint256 amount) external payable {
+        require(amount <= msg.value, "Strategy Manager: Amount is lesser than msg.value");
         address strategy = strategies[_strategyName];
         require(
             strategy != address(0),
@@ -83,6 +84,8 @@ contract StrategyManager {
             "StrategyManager: Strategy does not exist"
         );
         // Forward the call to the strategy contract
+        address vaultToken = IStrategy(strategy).vaultToken();
+        IERC4626(vaultToken).approve(strategy, _amount);
         IStrategy(strategy).withdraw(msg.sender, _amount);
         emit Withdraw(_strategyName);
     }
@@ -90,7 +93,7 @@ contract StrategyManager {
     // Function to check the balance of a user in a strategy
     function balance(
         string memory _strategyName,
-        address _user
+        address user
     ) external view returns (uint256 _balance) {
         address strategy = strategies[_strategyName];
         require(
@@ -98,6 +101,6 @@ contract StrategyManager {
             "StrategyManager: Strategy does not exist"
         );
         // Forward the call to the strategy contract
-        _balance = IStrategy(strategy).balance(_user);
+        _balance = IStrategy(strategy).balance(user);
     }
 }
