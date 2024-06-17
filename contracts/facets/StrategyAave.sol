@@ -16,7 +16,6 @@ contract StrategyAave is IStrategy, AccessControl {
     
     event Deposited(uint256 amount);
     event Withdraw(uint256 amount);
-    event Balance(uint256 amount, address u);
 
     IPool pool;
     address public vaultToken;
@@ -35,15 +34,12 @@ contract StrategyAave is IStrategy, AccessControl {
     function deposit(address user) external payable {
         pool.depositETH{ value: msg.value }(address(pool), address(this), 0);
         tokenX.approve(address(vaultToken) , msg.value);
-        // IERC4626(vaultToken).deposit(msg.value, address(this));
+        IERC4626(vaultToken).deposit(msg.value, address(this));
         emit Deposited(msg.value);
     }
 
     function withdraw(address user, uint256 amount) external {
-        // Implement withdraw logic from Aave protocol using aaveDataProviderAddress and aaveDepositVaultAddress
-        // Redeem shares from Aave deposit vault and transfer ETH to user
-        // IERC4626(vaultToken).withdraw(amount, address(this), address(this));
-        // require(tokenX.balanceOf(address(this)) == amount, "Checking");
+        IERC4626(vaultToken).withdraw(amount, address(this), address(this));
         tokenX.approve(address(pool), amount);
         pool.withdrawETH(address(pool), amount, address(this));
         emit Withdraw(amount);
