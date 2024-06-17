@@ -44,6 +44,7 @@ contract StrategyAave is IStrategy, AccessControl {
         // Redeem shares from Aave deposit vault and transfer ETH to user
         // IERC4626(vaultToken).withdraw(amount, address(this), address(this));
         // require(tokenX.balanceOf(address(this)) == amount, "Checking");
+        tokenX.approve(address(pool), amount);
         pool.withdrawETH(address(pool), amount, address(this));
         emit Withdraw(amount);
     }
@@ -52,4 +53,7 @@ contract StrategyAave is IStrategy, AccessControl {
         _balance = IERC4626(vaultToken).maxWithdraw(user);
         return _balance;
     }
+
+    fallback() external payable {}
+    receive() external payable {}
 }
