@@ -34,14 +34,14 @@ contract StrategyAave is IStrategy, AccessControl {
     function deposit(address user) external payable {
         pool.depositETH{ value: msg.value }(address(pool), address(this), 0);
         tokenX.approve(address(vaultToken) , msg.value);
-        IERC4626(vaultToken).deposit(msg.value, address(this));
+        IERC4626(vaultToken).deposit(msg.value, user);
         emit Deposited(msg.value);
     }
 
     function withdraw(address user, uint256 amount) external {
-        IERC4626(vaultToken).withdraw(amount, address(this), address(this));
+        IERC4626(vaultToken).withdraw(amount, address(this), user);
         tokenX.approve(address(pool), amount);
-        pool.withdrawETH(address(pool), amount, address(this));
+        pool.withdrawETH(address(pool), amount, user);
         emit Withdraw(amount);
     }
 

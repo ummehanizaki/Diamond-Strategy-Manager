@@ -83,9 +83,7 @@ contract StrategyManager {
             strategy != address(0),
             "StrategyManager: Strategy does not exist"
         );
-        // Forward the call to the strategy contract
-        address vaultToken = IStrategy(strategy).vaultToken();
-        IERC4626(vaultToken).approve(strategy, _amount);
+        IERC4626(IStrategy(strategy).vaultToken()).approve(strategy, _amount);
         IStrategy(strategy).withdraw(msg.sender, _amount);
         emit Withdraw(_strategyName);
     }

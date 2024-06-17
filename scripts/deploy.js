@@ -178,17 +178,13 @@ async function deployDiamond () {
   console.log(ethers.utils.formatEther(tx5))
   // console.log(tx5)
 
-  // tx5 = await vaultToken.approve(strategyAave, valueInWei);
-  // const r5 = await tx5.wait()
-  // console.log(r5)
-
-  // tx5 = await vaultToken.previewWithdraw(valueInWei);
-  // console.log(ethers.utils.formatEther(tx5))
-  // console.log(tx5)
-  
-  tx6 = await diamondContract1.withdraw(strategyName, valueInWei);
+  tx6 = await vaultToken.approve(strategyAave.address, valueInWei);
   const r6 = await tx6.wait()
   console.log(r6)
+
+  tx7 = await diamondContract1.withdraw(strategyName, valueInWei);
+  const r7 = await tx7.wait()
+  console.log(r7)
 
   // await testFunctions("Aave", strategyAave.address, 10000000, diamondContract1, contractOwner);
   // await testFunctions("Compound", "0x2dCD1CD26Be25A3F2fD4a2E4c9D8b67F9bb1c91B", 10000000);
