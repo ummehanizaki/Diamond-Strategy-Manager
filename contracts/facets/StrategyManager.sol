@@ -5,6 +5,7 @@ import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import "../interfaces/IStrategy.sol";
 import "../interfaces/IERC4626.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 
 contract StrategyManager {
@@ -63,16 +64,16 @@ contract StrategyManager {
     }
 
     // Function to deposit funds into a strategy
-    function deposit(string memory _strategyName, uint256 amount) external payable {
-        require(amount <= msg.value, "Strategy Manager: Amount is lesser than msg.value");
+    function deposit(string memory _strategyName, uint256 amount) external {
         address strategy = strategies[_strategyName];
         require(
             strategy != address(0),
             "StrategyManager: Strategy does not exist"
         );
-
+        IERC20 asset = IERC20(IStrategy(strategy).asset());
+        asset.transferFrom(msg.sender, strategy, amount);
         // Forward the call to the strategy contract
-        IStrategy(strategy).deposit{ value: msg.value }(msg.sender);
+        IStrategy(strategy).deposit(amount, msg.sender);
         emit Deposited(_strategyName);
     }
 

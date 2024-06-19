@@ -5,7 +5,7 @@
 pragma solidity ^0.8.0;
 
 import "../interfaces/IStrategy.sol";
-import "../interfaces/IPool.sol";
+import "../interfaces/IAavePool.sol";
 import "../interfaces/IERC4626.sol";
 import "../TokenX.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -17,31 +17,35 @@ contract StrategyAave is IStrategy, AccessControl {
     event Deposited(uint256 amount);
     event Withdraw(uint256 amount);
 
-    IPool pool;
+    IAavePool pool;
     address public vaultToken;
     IERC20 tokenX;
+    address public asset;
 
     constructor(
         address _poolAddress,
         address _vaultToken,
-        address _tokenX
+        address _tokenX,
+        address _asset
         ) {
-            pool = IPool(_poolAddress);
+            pool = IAavePool(_poolAddress);
             vaultToken = _vaultToken;
             tokenX = IERC20(_tokenX);
+            asset = address(_asset);
     }
 
-    function deposit(address user) external payable {
-        pool.depositETH{ value: msg.value }(address(pool), address(this), 0);
-        tokenX.approve(address(vaultToken) , msg.value);
-        IERC4626(vaultToken).deposit(msg.value, user);
-        emit Deposited(msg.value);
+    function deposit(uint256 amount, address user) external {
+        IERC20(asset).approve(address(pool), amount);
+        pool.supply(asset, amount, address(this), 0);
+        tokenX.approve(address(vaultToken) , amount);
+        IERC4626(vaultToken).deposit(amount, user);
+        emit Deposited(amount);
     }
 
     function withdraw(address user, uint256 amount) external {
         IERC4626(vaultToken).withdraw(amount, address(this), user);
         tokenX.approve(address(pool), amount);
-        pool.withdrawETH(address(pool), amount, user);
+        pool.withdraw(asset, amount, user);
         emit Withdraw(amount);
     }
 

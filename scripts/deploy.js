@@ -5,61 +5,13 @@ const { getSelectors, FacetCutAction } = require('./libraries/diamond.js')
 const hre = require("hardhat");
 const { expect } = require("chai");
 
-async function removeAndAddStrategy(strategyName, strategyAddress, diamondContract) {
-  try {
-    // // Remove the strategy
-    // console.log(`${strategyName} strategy removal initiated`);
-
-    // tx2 = await diamondContract.removeStrategy(strategyName);
-    // console.log(tx2.events)
-    // console.log(`${strategyName} strategy removal initiated`);
-
-    // Check if removal was successful before adding again
-    const isStrategyRemoved = await diamondContract.isStrategy(strategyName);
-    
-    if (!isStrategyRemoved) {
-      console.log(`${strategyName} strategy removal successful`);
-    } else {
-      console.log(`${strategyName} strategy still exists (unexpected)`);
-      return; 
-    }
-
-    // Add the strategy back (assuming successful removal)
-    await diamondContract.addStrategy(strategyName, strategyAddress);
-    console.log(`${strategyName} strategy addition initiated`);
-
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // 3 second delay
-
-    const currentStrategy = await diamondContract.isStrategy(strategyName);
-    console.log(`${strategyName} current strategy:`, currentStrategy);
-  } catch (error) {
-    console.error("Error removing and adding strategy:", error);
-  }
-}
-
-async function testFunctions(strategyName, strategyAddress, amount, diamondContract, contractOwner) {
-  try {
-    await removeAndAddStrategy(strategyName, strategyAddress);
-    console.log("Strategy removed and added successfully");
-
-    const valueInWei = ethers.utils.parseEther("0.00001"); 
-    const tx1 = await diamondContract.deposit(contractOwner.address,valueInWei,{ value: valueInWei });
-    const r = await tx1.wait()
-    console.log(r.events)
-    await expect(diamondContract.deposit(contractOwner.address,valueInWei,{ value: valueInWei })).to.emit(diamondContract, "Deposited")
-
-    console.log("Deposit transaction sent");
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
-
 async function deployDiamond () {
   const accounts = await ethers.getSigners()
   const contractOwner = accounts[0]
 
-  const WETHGateway = "0x387d311e47e80b498169e6fb51d3193167d89F7D"
+  const WETHGateway = "0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951"
   const aaveToken = "0x5b071b590a59395fE4025A0Ccc1FcC931AAc1830"
+  const WETH = "0xC558DBdd856501FCd9aaF1E62eae57A9F0629a3c"
   // Ref Txn hash : https://sepolia.etherscan.io/tx/0xe0a2750c460a11630a5385e4726b5bdf56ca3574203a594659286efa37beed02
 
   // deploy vault token
@@ -70,7 +22,7 @@ async function deployDiamond () {
 
   // deploy Aave strategy
   const StrategyAave = await ethers.getContractFactory('StrategyAave')
-  const strategyAave = await StrategyAave.deploy(WETHGateway,vaultToken.address, aaveToken)
+  const strategyAave = await StrategyAave.deploy(WETHGateway,vaultToken.address, aaveToken, WETH)
   await strategyAave.deployed()
   console.log('StrategyAave deployed:', strategyAave.address)
 
@@ -92,7 +44,7 @@ async function deployDiamond () {
   await diamondInit.deployed()
   console.log('DiamondInit deployed:', diamondInit.address)
 
-  const valueInWei = ethers.utils.parseEther("0.00001"); 
+  const valueInWei = 10000000000000; 
 
   // deploy facets
   console.log('Deploying facets')
@@ -145,9 +97,6 @@ async function deployDiamond () {
   );
 
   const strategyName = "Aave"
-  tx2 = await diamondContract1.removeStrategy(strategyName);
-  const r2 = await tx2.wait()
-  // console.log(r2.events)
   await expect(diamondContract1.removeStrategy(strategyName)).to.emit(diamondContract1, "StrategyRemoved")
   const isStrategyRemoved = await diamondContract1.isStrategy(strategyName);
   if (!isStrategyRemoved) {
@@ -156,21 +105,27 @@ async function deployDiamond () {
     console.log(`${strategyName} strategy still exists (unexpected)`);
     return; 
   }
-  // Add the strategy back (assuming successful removal)
   console.log(`${strategyName} strategy addition initiated`);
-  // tx3 = await diamondContract1.addStrategy(strategyName, strategyAave.address);
-  // const r3 = await tx3.wait()
-  // console.log(r3.events)
   await expect(diamondContract1.addStrategy(strategyName, strategyAave.address)).to.emit(diamondContract1, "StrategyAdded")
   const currentStrategy = await diamondContract1.isStrategy(strategyName);
-  console.log(`${strategyName} current strategy:`, currentStrategy.address);
+  console.log(`${strategyName} current strategy:`, currentStrategy);
 
   const tokenx = await ethers.getContractAt(
     "TokenX",
     aaveToken
   );  
 
-  tx4 = await diamondContract1.deposit(strategyName, valueInWei, { value: valueInWei });
+  const wethTokenX = await ethers.getContractAt(
+    "WETH9",
+    WETH
+  ); 
+
+  tx2 = await wethTokenX.deposit({ value: valueInWei });
+  tx3 = await wethTokenX.approve(diamondContract1.address, valueInWei);
+  const r3 = await tx3.wait()
+  // console.log(r3)
+
+  tx4 = await diamondContract1.deposit(strategyName, valueInWei);
   const r4 = await tx4.wait()
   // console.log(r4)
 
@@ -180,15 +135,70 @@ async function deployDiamond () {
 
   tx6 = await vaultToken.approve(strategyAave.address, valueInWei);
   const r6 = await tx6.wait()
-  console.log(r6)
+  // console.log(r6)
 
   tx7 = await diamondContract1.withdraw(strategyName, valueInWei);
   const r7 = await tx7.wait()
-  console.log(r7)
+  // console.log(r7)
 
-  // await testFunctions("Aave", strategyAave.address, 10000000, diamondContract1, contractOwner);
-  // await testFunctions("Compound", "0x2dCD1CD26Be25A3F2fD4a2E4c9D8b67F9bb1c91B", 10000000);
-  // return diamondContract.address
+
+  // const cToken = "0x2943ac1216979aD8dB76D9147F64E61adc126e96"
+
+  // const WETHGateway2 = "0x2943ac1216979aD8dB76D9147F64E61adc126e96"
+  // const WETH2 = "0x2D5ee574e710219a521449679A4A7f2B43f046ad"
+  // // Ref Txn hash : https://sepolia.etherscan.io/tx/0xe0a2750c460a11630a5385e4726b5bdf56ca3574203a594659286efa37beed02
+
+  // // deploy vault token
+  // const VaultToken2 = await ethers.getContractFactory('VaultToken')
+  // const vaultToken2 = await VaultToken2.deploy(cToken)
+  // await vaultToken2.deployed()
+  // console.log('VaultToken deployed:', vaultToken2.address)
+
+  // // deploy Aave strategy
+  // const StrategyCompound = await ethers.getContractFactory('StrategyCompound')
+  // const strategyCompound = await StrategyCompound.deploy(WETHGateway2,vaultToken2.address, cToken, WETH2)
+  // await strategyCompound.deployed()
+  // console.log('StrategyCompound deployed:', strategyCompound.address)
+
+  // const strategyName2 = "Compound"
+  // await expect(diamondContract1.addStrategy(strategyName2, WETHGateway2)).to.emit(diamondContract1, "StrategyAdded")
+
+  // const isStrategyRemoved2 = await diamondContract1.isStrategy(strategyName2);
+  // if (isStrategyRemoved2) {
+  //   console.log(`${strategyName2} strategy addition successful`);
+  // } else {
+  //   console.log(`${strategyName2} strategy does not exist (unexpected)`);
+  //   return; 
+  // }
+
+  // // const weth = await ethers.getContractAt(
+  // //   "TokenX",
+  // //   WETH2
+  // // );  
+  // const wethTokenX2 = await ethers.getContractAt(
+  //   "WETH9",
+  //   WETH2
+  // );  
+
+  // tx22 = await wethTokenX2.deposit({ value: valueInWei });
+  // tx32 = await wethTokenX2.approve(diamondContract1.address, valueInWei);
+  // const r32 = await tx32.wait()
+  // // console.log(r32)
+
+  // tx42 = await diamondContract1.deposit(strategyName2, valueInWei);
+  // const r42 = await tx42.wait()
+  // // console.log(r42)
+
+  // tx5 = await tokenx.balanceOf(strategyAave.address);
+  // console.log(ethers.utils.formatEther(tx5))
+  // // console.log(tx5)
+
+  // tx6 = await vaultToken.approve(strategyAave.address, valueInWei);
+  // const r6 = await tx6.wait()
+  // // console.log(r6)
+
+  // tx7 = await diamondContract1.withdraw(strategyName, valueInWei);
+  // const r7 = await tx7.wait()
 
 }
 
