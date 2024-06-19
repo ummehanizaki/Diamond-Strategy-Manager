@@ -19,7 +19,7 @@ contract StrategyAave is IStrategy, AccessControl {
 
     IAavePool pool;
     address public vaultToken;
-    IERC20 tokenX;
+    address public tokenX;
     address public asset;
 
     constructor(
@@ -30,21 +30,21 @@ contract StrategyAave is IStrategy, AccessControl {
         ) {
             pool = IAavePool(_poolAddress);
             vaultToken = _vaultToken;
-            tokenX = IERC20(_tokenX);
+            tokenX = _tokenX;
             asset = address(_asset);
     }
 
     function deposit(uint256 amount, address user) external {
         IERC20(asset).approve(address(pool), amount);
         pool.supply(asset, amount, address(this), 0);
-        tokenX.approve(address(vaultToken) , amount);
+        IERC20(tokenX).approve(address(vaultToken) , amount);
         IERC4626(vaultToken).deposit(amount, user);
         emit Deposited(amount);
     }
 
     function withdraw(address user, uint256 amount) external {
         IERC4626(vaultToken).withdraw(amount, address(this), user);
-        tokenX.approve(address(pool), amount);
+        IERC20(tokenX).approve(address(pool), amount);
         pool.withdraw(asset, amount, user);
         emit Withdraw(amount);
     }

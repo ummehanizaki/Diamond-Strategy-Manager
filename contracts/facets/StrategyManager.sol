@@ -70,9 +70,7 @@ contract StrategyManager {
             strategy != address(0),
             "StrategyManager: Strategy does not exist"
         );
-        IERC20 asset = IERC20(IStrategy(strategy).asset());
-        asset.transferFrom(msg.sender, strategy, amount);
-        // Forward the call to the strategy contract
+        IERC20(IStrategy(strategy).asset()).transferFrom(msg.sender, strategy, amount);
         IStrategy(strategy).deposit(amount, msg.sender);
         emit Deposited(_strategyName);
     }
@@ -84,7 +82,7 @@ contract StrategyManager {
             strategy != address(0),
             "StrategyManager: Strategy does not exist"
         );
-        IERC4626(IStrategy(strategy).vaultToken()).approve(strategy, _amount);
+        // IERC20(IStrategy(strategy).tokenX()).transferFrom(msg.sender, strategy, _amount);
         IStrategy(strategy).withdraw(msg.sender, _amount);
         emit Withdraw(_strategyName);
     }

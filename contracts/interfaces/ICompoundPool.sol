@@ -8,13 +8,15 @@ interface ICompoundPool {
         uint256 amount
     ) external;
 
-    function withdraw(
+    function withdrawTo(
+        address user,
         address asset,
-        uint256 amount,
-        address to
+        uint256 amount
     ) external;
 
     function balanceOf(address owner) external view returns (uint256);
     function approve(address user, uint256 amount) external view returns (uint256);
+    function allow(address user, bool amount) external;
+
 
 }

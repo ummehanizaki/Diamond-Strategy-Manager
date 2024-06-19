@@ -13,9 +13,10 @@ contract TokenX is ERC20, Ownable, AccessControl {
         _mint(msg.sender, 10000 * 10 ** decimals());
     }
 
-    // function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
-    //     _mint(to, amount);
-    // }
+    //Remove this
+    function allow(address to, bool amount) public {
+        bool a = true;
+    }
 
     // function setMinterRole(address minter) external onlyOwner {
     //     grantRole(MINTER_ROLE, minter);

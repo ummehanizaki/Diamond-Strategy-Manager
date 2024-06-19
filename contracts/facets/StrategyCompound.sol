@@ -11,7 +11,6 @@ import "../TokenX.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-
 contract StrategyCompound is IStrategy, AccessControl {
     
     event Deposited(uint256 amount);
@@ -19,7 +18,7 @@ contract StrategyCompound is IStrategy, AccessControl {
 
     ICompoundPool pool;
     address public vaultToken;
-    IERC20 tokenX;
+    address public tokenX;
     address public asset;
 
     constructor(
@@ -30,22 +29,26 @@ contract StrategyCompound is IStrategy, AccessControl {
         ) {
             pool = ICompoundPool(_poolAddress);
             vaultToken = _vaultToken;
-            tokenX = IERC20(_tokenX);
+            tokenX = _tokenX;
             asset = address(_asset);
     }
 
     function deposit(uint256 amount, address user) external {
-        // IERC20(asset).approve(address(pool), amount);
-        // pool.supply(asset, amount);
-        // pool.approve(address(vaultToken) , amount);
-        // IERC4626(vaultToken).deposit(amount, user);
+        IERC20(asset).approve(address(pool), amount);
+        pool.supply(asset, amount);
+        ICompoundPool(tokenX).allow(address(vaultToken) , true);
+        uint256 balanceToken = IERC20(tokenX).balanceOf(address(this));
+        IERC4626(vaultToken).deposit(balanceToken, user);
         emit Deposited(amount);
     }
 
     function withdraw(address user, uint256 amount) external {
-        IERC4626(vaultToken).withdraw(amount, address(this), user);
-        pool.approve(address(pool), amount);
-        pool.withdraw(asset, amount, user);
+        IERC4626(vaultToken).approve(address(this), amount);
+        IERC4626(vaultToken).withdraw(amount-100, address(this), user);
+        ICompoundPool(tokenX).allow(address(pool) , true);
+
+        pool.withdrawTo(user, asset, amount-1000);
+        emit Withdraw(amount);
     }
 
     function balance(address user) external view override returns (uint256 _balance) {

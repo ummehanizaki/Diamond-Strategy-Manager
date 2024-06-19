@@ -9,5 +9,6 @@ interface IStrategy {
     function balance(address user) external view returns (uint256);
     function vaultToken() external view returns (address);
     function asset() external view returns (address);
+    function tokenX() external view returns (address);
 
 }
