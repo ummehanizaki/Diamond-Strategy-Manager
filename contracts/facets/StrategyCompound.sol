@@ -7,7 +7,6 @@ pragma solidity ^0.8.0;
 import "../interfaces/IStrategy.sol";
 import "../interfaces/ICompoundPool.sol";
 import "../interfaces/IERC4626.sol";
-import "../TokenX.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
@@ -20,7 +19,12 @@ contract StrategyCompound is IStrategy, AccessControl {
     address public tokenX;
     address public asset;
 
-    constructor(address _poolAddress, address _vaultToken, address _tokenX, address _asset) {
+    constructor(
+        address _poolAddress,
+        address _vaultToken,
+        address _tokenX,
+        address _asset
+    ) {
         pool = ICompoundPool(_poolAddress);
         vaultToken = _vaultToken;
         tokenX = _tokenX;
@@ -45,7 +49,9 @@ contract StrategyCompound is IStrategy, AccessControl {
         emit Withdraw(amount);
     }
 
-    function balance(address user) external view override returns (uint256 _balance) {
+    function balance(
+        address user
+    ) external view override returns (uint256 _balance) {
         _balance = IERC4626(vaultToken).maxWithdraw(user);
         return _balance;
     }

@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import "../interfaces/IStrategy.sol";
-import "../interfaces/IERC4626.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract StrategyManager {
@@ -21,14 +20,26 @@ contract StrategyManager {
 
     // Modifier to restrict access to only the owner (diamond contract)
     modifier onlyOwner() {
-        require(msg.sender == LibDiamond.contractOwner(), "StrategyManager: caller is not the owner");
+        require(
+            msg.sender == LibDiamond.contractOwner(),
+            "StrategyManager: caller is not the owner"
+        );
         _;
     }
 
     // Function to add a new strategy contract
-    function addStrategy(string memory _strategyName, address _strategyAddress) external onlyOwner {
-        require(_strategyAddress != address(0), "StrategyManager: Invalid strategy address");
-        require(strategies[_strategyName] == address(0), "StrategyManager: Strategy already exists");
+    function addStrategy(
+        string memory _strategyName,
+        address _strategyAddress
+    ) external onlyOwner {
+        require(
+            _strategyAddress != address(0),
+            "StrategyManager: Invalid strategy address"
+        );
+        require(
+            strategies[_strategyName] == address(0),
+            "StrategyManager: Strategy already exists"
+        );
         strategies[_strategyName] = _strategyAddress;
         emit StrategyAdded(_strategyName, _strategyAddress);
     }
@@ -38,7 +49,9 @@ contract StrategyManager {
         emit StrategyRemoved(_strategyName);
     }
 
-    function isStrategy(string memory _strategyName) external view returns (bool) {
+    function isStrategy(
+        string memory _strategyName
+    ) external view returns (bool) {
         if (strategies[_strategyName] == address(0)) {
             return false;
         } else {
@@ -49,8 +62,15 @@ contract StrategyManager {
     // Function to deposit funds into a strategy
     function deposit(string memory _strategyName, uint256 amount) external {
         address strategy = strategies[_strategyName];
-        require(strategy != address(0), "StrategyManager: Strategy does not exist");
-        IERC20(IStrategy(strategy).asset()).transferFrom(msg.sender, strategy, amount);
+        require(
+            strategy != address(0),
+            "StrategyManager: Strategy does not exist"
+        );
+        IERC20(IStrategy(strategy).asset()).transferFrom(
+            msg.sender,
+            strategy,
+            amount
+        );
         IStrategy(strategy).deposit(amount, msg.sender);
         emit Deposited(_strategyName);
     }
@@ -58,17 +78,24 @@ contract StrategyManager {
     // Function to withdraw funds from a strategy
     function withdraw(string memory _strategyName, uint256 _amount) external {
         address strategy = strategies[_strategyName];
-        require(strategy != address(0), "StrategyManager: Strategy does not exist");
-        // IERC20(IStrategy(strategy).tokenX()).transferFrom(msg.sender, strategy, _amount);
+        require(
+            strategy != address(0),
+            "StrategyManager: Strategy does not exist"
+        );
         IStrategy(strategy).withdraw(msg.sender, _amount);
         emit Withdraw(_strategyName);
     }
 
     // Function to check the balance of a user in a strategy
-    function balance(string memory _strategyName, address user) external view returns (uint256 _balance) {
+    function balance(
+        string memory _strategyName,
+        address user
+    ) external view returns (uint256 _balance) {
         address strategy = strategies[_strategyName];
-        require(strategy != address(0), "StrategyManager: Strategy does not exist");
-        // Forward the call to the strategy contract
+        require(
+            strategy != address(0),
+            "StrategyManager: Strategy does not exist"
+        );
         _balance = IStrategy(strategy).balance(user);
     }
 }

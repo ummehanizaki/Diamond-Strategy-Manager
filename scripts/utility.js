@@ -1,24 +1,6 @@
-// deployment.js
-
-/* global ethers */
-/* eslint prefer-const: "off" */
-
 const { getSelectors, FacetCutAction } = require("./libraries/diamond.js");
-const { expect } = require("chai");
-const {
-  FacetNames,
-  strategyName1,
-  strategyName2,
-  cToken,
-  WETHGateway2,
-  WETH2,
-  valueInWei,
-  WETHGateway,
-  aaveToken,
-  WETH,
-} = require("./constants");
+const { FacetNames } = require("./constants");
 
-// Deployment Functions
 async function deployFacet(name) {
   const Facet = await ethers.getContractFactory(name);
   const facet = await Facet.deploy();
@@ -78,7 +60,7 @@ async function deployStrategyManager() {
 }
 
 async function initializeDiamond(cut, diamond, diamondInit) {
-  console.log("Initializing Diamond Cut:", cut);
+  console.log("Initializing Diamond Cut:");
   const diamondCut = await ethers.getContractAt("IDiamondCut", diamond.address);
   const functionCall = diamondInit.interface.encodeFunctionData("init");
   const tx = await diamondCut.diamondCut(
@@ -94,31 +76,52 @@ async function initializeDiamond(cut, diamond, diamondInit) {
   console.log("Completed diamond initialization");
 }
 
-async function deployVaultToken(token) {
-  const VaultToken = await ethers.getContractFactory("VaultToken");
-  const vaultToken = await VaultToken.deploy(token);
-  await vaultToken.deployed();
-  console.log("VaultToken deployed:", vaultToken.address);
-  return vaultToken;
+async function deployVault(depositToken) {
+  const Vault = await ethers.getContractFactory("VaultToken");
+  const vault = await Vault.deploy(depositToken);
+  await vault.deployed();
+  console.log("Vault deployed:", vault.address);
+  return vault;
 }
 
 async function deployStrategy(
-  name,
-  WETHGate,
+  strategyName,
+  PoolWETH,
   vaultTokenAddress,
-  cToken,
-  WETH2
+  poolToken,
+  WETH
 ) {
-  const Strategy = await ethers.getContractFactory(name);
+  const Strategy = await ethers.getContractFactory(strategyName);
   const strategy = await Strategy.deploy(
-    WETHGate,
+    PoolWETH,
     vaultTokenAddress,
-    cToken,
-    WETH2
+    poolToken,
+    WETH
   );
   await strategy.deployed();
   console.log("Strategy deployed:", strategy.address);
   return strategy;
+}
+
+async function deployDiamondContracts() {
+  const accounts = await ethers.getSigners();
+  const contractOwner = accounts[0];
+
+  const diamondCutFacet = await deployDiamondCutFacet();
+
+  const diamond = await deployDiamond(
+    contractOwner.address,
+    diamondCutFacet.address
+  );
+
+  const diamondInit = await deployDiamondInit();
+
+  const cut = await deployFacets();
+  const strategyManagerFacet = await deployStrategyManager();
+  cut.push(strategyManagerFacet);
+  await initializeDiamond(cut, diamond, diamondInit);
+
+  return diamond;
 }
 
 module.exports = {
@@ -126,9 +129,10 @@ module.exports = {
   deployFacets,
   deployStrategyManager,
   initializeDiamond,
-  deployVaultToken,
+  deployVault,
   deployStrategy,
   deployDiamondCutFacet,
   deployDiamond,
   deployDiamondInit,
+  deployDiamondContracts,
 };
