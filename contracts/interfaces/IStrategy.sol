@@ -12,7 +12,7 @@ interface IStrategy {
 
     function vaultToken() external view returns (address);
 
-    function asset() external view returns (address);
+    function weth() external view returns (address);
 
-    function tokenX() external view returns (address);
+    function aWETH() external view returns (address);
 }

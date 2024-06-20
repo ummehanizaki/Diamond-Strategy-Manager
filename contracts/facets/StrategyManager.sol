@@ -66,7 +66,7 @@ contract StrategyManager {
             strategy != address(0),
             "StrategyManager: Strategy does not exist"
         );
-        IERC20(IStrategy(strategy).asset()).transferFrom(
+        IERC20(IStrategy(strategy).weth()).transferFrom(
             msg.sender,
             strategy,
             amount

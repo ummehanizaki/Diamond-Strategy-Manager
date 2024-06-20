@@ -16,26 +16,26 @@ contract StrategyCompound is IStrategy, AccessControl {
 
     ICompoundPool pool;
     address public vaultToken;
-    address public tokenX;
-    address public asset;
+    address public aWETH;
+    address public weth;
 
     constructor(
         address _poolAddress,
         address _vaultToken,
-        address _tokenX,
-        address _asset
+        address _aWETH,
+        address _weth
     ) {
         pool = ICompoundPool(_poolAddress);
         vaultToken = _vaultToken;
-        tokenX = _tokenX;
-        asset = address(_asset);
+        aWETH = _aWETH;
+        weth = address(_weth);
     }
 
     function deposit(uint256 amount, address user) external {
-        IERC20(asset).approve(address(pool), amount);
-        pool.supply(asset, amount);
-        ICompoundPool(tokenX).allow(address(vaultToken), true);
-        uint256 balanceToken = IERC20(tokenX).balanceOf(address(this));
+        IERC20(weth).approve(address(pool), amount);
+        pool.supply(weth, amount);
+        ICompoundPool(aWETH).allow(address(vaultToken), true);
+        uint256 balanceToken = IERC20(aWETH).balanceOf(address(this));
         IERC4626(vaultToken).deposit(balanceToken, user);
         emit Deposited(amount);
     }
@@ -43,9 +43,9 @@ contract StrategyCompound is IStrategy, AccessControl {
     function withdraw(address user, uint256 amount) external {
         IERC4626(vaultToken).approve(address(this), amount);
         IERC4626(vaultToken).withdraw(amount - 100, address(this), user);
-        ICompoundPool(tokenX).allow(address(pool), true);
+        ICompoundPool(aWETH).allow(address(pool), true);
 
-        pool.withdrawTo(user, asset, amount - 1000);
+        pool.withdrawTo(user, weth, amount - 1000);
         emit Withdraw(amount);
     }
 

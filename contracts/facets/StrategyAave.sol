@@ -16,33 +16,33 @@ contract StrategyAave is IStrategy, AccessControl {
 
     IAavePool pool;
     address public vaultToken;
-    address public tokenX;
-    address public asset;
+    address public aWETH;
+    address public weth;
 
     constructor(
         address _poolAddress,
         address _vaultToken,
-        address _tokenX,
-        address _asset
+        address _aWETH,
+        address _weth
     ) {
         pool = IAavePool(_poolAddress);
         vaultToken = _vaultToken;
-        tokenX = _tokenX;
-        asset = address(_asset);
+        aWETH = _aWETH;
+        weth = address(_weth);
     }
 
     function deposit(uint256 amount, address user) external {
-        IERC20(asset).approve(address(pool), amount);
-        pool.supply(asset, amount, address(this), 0);
-        IERC20(tokenX).approve(address(vaultToken), amount);
+        IERC20(weth).approve(address(pool), amount);
+        pool.supply(weth, amount, address(this), 0);
+        IERC20(aWETH).approve(address(vaultToken), amount);
         IERC4626(vaultToken).deposit(amount, user);
         emit Deposited(amount);
     }
 
     function withdraw(address user, uint256 amount) external {
         IERC4626(vaultToken).withdraw(amount, address(this), user);
-        IERC20(tokenX).approve(address(pool), amount);
-        pool.withdraw(asset, amount, user);
+        IERC20(aWETH).approve(address(pool), amount);
+        pool.withdraw(weth, amount, user);
         emit Withdraw(amount);
     }
 
