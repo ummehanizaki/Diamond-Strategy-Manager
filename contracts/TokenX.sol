@@ -8,7 +8,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract TokenX is ERC20, Ownable, AccessControl {
     // bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    constructor(string memory name, string memory symbol) ERC20(name, symbol) Ownable(msg.sender){
+    constructor(
+        string memory name,
+        string memory symbol
+    ) ERC20(name, symbol) Ownable(msg.sender) {
         // grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _mint(msg.sender, 10000 * 10 ** decimals());
     }

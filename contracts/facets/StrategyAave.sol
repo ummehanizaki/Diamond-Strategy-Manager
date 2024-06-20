@@ -11,9 +11,7 @@ import "../TokenX.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-
 contract StrategyAave is IStrategy, AccessControl {
-    
     event Deposited(uint256 amount);
     event Withdraw(uint256 amount);
 
@@ -22,22 +20,17 @@ contract StrategyAave is IStrategy, AccessControl {
     address public tokenX;
     address public asset;
 
-    constructor(
-        address _poolAddress,
-        address _vaultToken,
-        address _tokenX,
-        address _asset
-        ) {
-            pool = IAavePool(_poolAddress);
-            vaultToken = _vaultToken;
-            tokenX = _tokenX;
-            asset = address(_asset);
+    constructor(address _poolAddress, address _vaultToken, address _tokenX, address _asset) {
+        pool = IAavePool(_poolAddress);
+        vaultToken = _vaultToken;
+        tokenX = _tokenX;
+        asset = address(_asset);
     }
 
     function deposit(uint256 amount, address user) external {
         IERC20(asset).approve(address(pool), amount);
         pool.supply(asset, amount, address(this), 0);
-        IERC20(tokenX).approve(address(vaultToken) , amount);
+        IERC20(tokenX).approve(address(vaultToken), amount);
         IERC4626(vaultToken).deposit(amount, user);
         emit Deposited(amount);
     }
@@ -55,5 +48,6 @@ contract StrategyAave is IStrategy, AccessControl {
     }
 
     fallback() external payable {}
+
     receive() external payable {}
 }
