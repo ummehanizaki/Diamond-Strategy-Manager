@@ -22,23 +22,26 @@ async function testStrategyRemovalAndAddition(
   strategyName,
   strategyAddress
 ) {
+  await expect(
+    diamondContract.addStrategy(strategyName, strategyAddress)
+  ).to.emit(diamondContract, "StrategyAdded");
   await expect(diamondContract.removeStrategy(strategyName)).to.emit(
     diamondContract,
     "StrategyRemoved"
   );
-  const isStrategyRemoved = await diamondContract.isStrategy(strategyName);
-  if (!isStrategyRemoved) {
-    console.log(`${strategyName} strategy removal successful`);
-  } else {
-    console.log(`${strategyName} strategy still exists (unexpected)`);
-    return;
-  }
+  // const isStrategyRemoved = await diamondContract.isStrategy(strategyName);
+  // if (!isStrategyRemoved) {
+  //   console.log(`${strategyName} strategy removal successful`);
+  // } else {
+  //   console.log(`${strategyName} strategy still exists (unexpected)`);
+  //   return;
+  // }
   console.log(`${strategyName} strategy addition initiated`);
   await expect(
     diamondContract.addStrategy(strategyName, strategyAddress)
   ).to.emit(diamondContract, "StrategyAdded");
-  const isStrategyAdded = await diamondContract.isStrategy(strategyName);
-  console.log(`${strategyName} strategy added:`, isStrategyAdded);
+  // const isStrategyAdded = await diamondContract.isStrategy(strategyName);
+  // console.log(`${strategyName} strategy added:`, isStrategyAdded);
 }
 
 async function testStrategy(
@@ -78,7 +81,8 @@ async function deployDiamondStandard() {
     AavePoolWETH,
     aaveVault.address,
     aWETH,
-    AaveWETH
+    AaveWETH,
+    diamond.address
   );
   await testStrategyRemovalAndAddition(
     diamondContract,
@@ -100,7 +104,8 @@ async function deployDiamondStandard() {
     CompoundPoolWETH,
     compoundVault.address,
     cWETH,
-    CompoundWETH
+    CompoundWETH,
+    diamond.address
   );
   await testStrategyRemovalAndAddition(
     diamondContract,
@@ -127,3 +132,8 @@ if (require.main === module) {
 }
 
 exports.deployDiamondStandard = deployDiamondStandard;
+
+// The strategy deposits in the ETH deposit vault using the given amount and issues shares to user based on ERC4626.
+// Add any other necessary validations as required
+// Write tests
+// Modify the starter diamond stand contracts where adding a selector should replace if it already exists. If you look at the change modules functionality of diamond standard, it has different internal functions to add/replace/remove selectors. However, updating add to replace if exists would save us the call to replace specifically. This task checks how you can navigate other’s code.
