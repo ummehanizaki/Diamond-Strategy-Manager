@@ -1,10 +1,6 @@
 const { ethers } = require("hardhat");
 const { expect } = require("chai");
-const {
-  deployVault,
-  deployStrategy,
-  deployDiamondContracts,
-} = require("./utility");
+const { deployStrategy, deployDiamondContracts } = require("./utility");
 const {
   strategyNameAave,
   strategyNameCompound,
@@ -28,7 +24,6 @@ async function deployDiamondStandard() {
     diamond.address
   );
 
-  const aaveVault = await deployVault(aWETH);
   const strategyAave = await deployStrategy(
     "StrategyAave",
     AavePoolWETH,

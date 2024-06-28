@@ -10,8 +10,6 @@ interface IStrategy {
 
     function balance(address user) external view returns (uint256);
 
-    function vaultToken() external view returns (address);
-
     function weth() external view returns (address);
 
     function aWETH() external view returns (address);

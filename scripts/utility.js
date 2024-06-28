@@ -76,14 +76,6 @@ async function initializeDiamond(cut, diamond, diamondInit) {
   console.log("Completed diamond initialization");
 }
 
-async function deployVault(depositToken) {
-  const Vault = await ethers.getContractFactory("VaultToken");
-  const vault = await Vault.deploy(depositToken);
-  await vault.deployed();
-  console.log("Vault deployed:", vault.address);
-  return vault;
-}
-
 async function deployStrategy(
   strategyName,
   PoolWETH,
@@ -129,7 +121,6 @@ module.exports = {
   deployFacets,
   deployStrategyManager,
   initializeDiamond,
-  deployVault,
   deployStrategy,
   deployDiamondCutFacet,
   deployDiamond,
