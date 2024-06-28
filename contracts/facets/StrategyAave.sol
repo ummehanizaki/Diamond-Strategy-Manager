@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract StrategyAave is ERC4626, AccessControl {
-    IAavePool immutable pool;
+    IAavePool public immutable pool;
     address public immutable aWETH;
     address public immutable weth;
 
@@ -32,18 +32,16 @@ contract StrategyAave is ERC4626, AccessControl {
     ) public override onlyRole(STRATEGY_MANAGER_ROLE) returns (uint256) {
         require(amount > 0, "Deposit amount must be greater than zero");
         uint256 maxAssets = maxDeposit(user);
-        if (amount > maxAssets) {
-            revert ERC4626ExceededMaxDeposit(user, amount, maxAssets);
-        }
+        require(amount <= maxAssets, "Deposit exceeds max limit");
+
         if (IERC20(weth).allowance(address(this), address(pool)) < amount) {
             IERC20(weth).approve(address(pool), type(uint256).max);
         }
 
         pool.supply(weth, amount, address(this), 0);
         uint256 shares = previewDeposit(amount);
-        if (shares == 0) {
-            shares = amount;
-        }
+        shares = shares == 0 ? amount : shares;
+
         _mint(user, shares);
         return shares;
     }
@@ -51,11 +49,10 @@ contract StrategyAave is ERC4626, AccessControl {
     function withdraw(
         address user,
         uint256 amount
-    ) public onlyRole(STRATEGY_MANAGER_ROLE) {
+    ) external onlyRole(STRATEGY_MANAGER_ROLE) {
         uint256 maxAssets = maxWithdraw(user);
-        if (amount > maxAssets) {
-            revert ERC4626ExceededMaxWithdraw(user, amount, maxAssets);
-        }
+        require(amount <= maxAssets, "Withdraw exceeds max limit");
+
         uint256 shares = previewWithdraw(amount);
         _burn(user, shares);
         pool.withdraw(weth, amount, user);

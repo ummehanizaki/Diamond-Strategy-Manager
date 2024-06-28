@@ -8,13 +8,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract StrategyManager is ReentrancyGuard {
-    // Mapping to store the addresses of strategy contracts
     mapping(string => address) public strategies;
 
-    // Event emitted when a strategy is added
     event StrategyAdded(string indexed strategyName, address indexed strategy);
     event StrategyRemoved(string indexed strategyName);
-
     event Deposit(
         string indexed strategyName,
         address indexed user,
@@ -27,7 +24,6 @@ contract StrategyManager is ReentrancyGuard {
         uint256 amount
     );
 
-    // Modifier to restrict access to only the owner (diamond contract)
     modifier onlyOwner() {
         require(
             msg.sender == LibDiamond.contractOwner(),
@@ -36,7 +32,6 @@ contract StrategyManager is ReentrancyGuard {
         _;
     }
 
-    // Function to add a new strategy contract
     function addStrategy(
         string memory _strategyName,
         address _strategyAddress
@@ -58,7 +53,6 @@ contract StrategyManager is ReentrancyGuard {
         emit StrategyRemoved(_strategyName);
     }
 
-    // Function to deposit funds into a strategy
     function deposit(
         string memory _strategyName,
         uint256 amount
@@ -74,7 +68,6 @@ contract StrategyManager is ReentrancyGuard {
         emit Deposit(_strategyName, msg.sender, amount, shares);
     }
 
-    // Function to withdraw funds from a strategy
     function withdraw(
         string memory _strategyName,
         uint256 amount
@@ -84,13 +77,12 @@ contract StrategyManager is ReentrancyGuard {
         emit Withdraw(_strategyName, msg.sender, amount);
     }
 
-    // Function to check the balance of a user in a strategy
     function balance(
         string memory _strategyName,
         address user
-    ) external view returns (uint256 _balance) {
+    ) external view returns (uint256) {
         address strategy = _getStrategyAddress(_strategyName);
-        _balance = IStrategy(strategy).balanceOf(user);
+        return IStrategy(strategy).balanceOf(user);
     }
 
     function _getStrategyAddress(

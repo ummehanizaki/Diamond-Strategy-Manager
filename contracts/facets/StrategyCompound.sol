@@ -7,9 +7,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract StrategyCompound is ERC4626, AccessControl {
-    ICompoundPool pool;
-    address public cWETH;
-    address public weth;
+    ICompoundPool public immutable pool;
+    address public immutable cWETH;
+    address public immutable weth;
 
     bytes32 public constant STRATEGY_MANAGER_ROLE =
         keccak256("STRATEGY_MANAGER_ROLE");
@@ -30,22 +30,23 @@ contract StrategyCompound is ERC4626, AccessControl {
         uint256 amount,
         address user
     ) public override onlyRole(STRATEGY_MANAGER_ROLE) returns (uint256) {
-        uint256 iniBal = IERC20(cWETH).balanceOf(address(this));
         require(amount > 0, "Deposit amount must be greater than zero");
+
         uint256 maxAssets = maxDeposit(user);
-        if (amount > maxAssets) {
-            revert ERC4626ExceededMaxDeposit(user, amount, maxAssets);
-        }
+        require(amount <= maxAssets, "Deposit exceeds max limit");
+
         if (IERC20(weth).allowance(address(this), address(pool)) < amount) {
             IERC20(weth).approve(address(pool), type(uint256).max);
         }
+
+        uint256 initialBalance = IERC20(cWETH).balanceOf(address(this));
         pool.supply(weth, amount);
-        uint256 finBal = IERC20(cWETH).balanceOf(address(this));
-        uint256 cWETHshares = finBal - iniBal;
-        uint256 shares = previewDeposit(cWETHshares);
-        if (shares == 0) {
-            shares = amount;
-        }
+        uint256 finalBalance = IERC20(cWETH).balanceOf(address(this));
+        uint256 cWETHShares = finalBalance - initialBalance;
+
+        uint256 shares = previewDeposit(cWETHShares);
+        shares = shares == 0 ? amount : shares;
+
         _mint(user, shares);
         return shares;
     }
@@ -55,9 +56,8 @@ contract StrategyCompound is ERC4626, AccessControl {
         uint256 amount
     ) external onlyRole(STRATEGY_MANAGER_ROLE) {
         uint256 maxAssets = maxWithdraw(user);
-        if (amount > maxAssets) {
-            revert ERC4626ExceededMaxWithdraw(user, amount, maxAssets);
-        }
+        require(amount <= maxAssets, "Withdraw exceeds max limit");
+
         uint256 shares = previewWithdraw(amount);
         _burn(user, shares);
         pool.withdrawTo(user, weth, amount);
