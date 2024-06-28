@@ -49,28 +49,25 @@ async function deployDiamondStandard() {
     strategyAave
   );
 
-  // const compoundVault = await deployVault(cWETH);
-  // const strategyCompound = await deployStrategy(
-  //   "StrategyCompound",
-  //   CompoundPoolWETH,
-  //   compoundVault.address,
-  //   cWETH,
-  //   CompoundWETH,
-  //   diamond.address
-  // );
-  // await testStrategyRemovalAndAddition(
-  //   diamondContract,
-  //   strategyNameCompound,
-  //   strategyCompound.address
-  // );
-  // await testStrategy(
-  //   CompoundWETH,
-  //   diamondContract,
-  //   strategyNameCompound,
-  //   amount,
-  //   compoundVault,
-  //   strategyCompound.address
-  // );
+  const strategyCompound = await deployStrategy(
+    "StrategyCompound",
+    CompoundPoolWETH,
+    cWETH,
+    CompoundWETH,
+    diamond.address
+  );
+  await testStrategyRemovalAndAddition(
+    diamondContract,
+    strategyNameCompound,
+    strategyCompound.address
+  );
+  await testStrategy(
+    CompoundWETH,
+    diamondContract,
+    strategyNameCompound,
+    amount,
+    strategyCompound
+  );
 }
 
 if (require.main === module) {

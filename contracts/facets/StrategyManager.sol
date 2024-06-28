@@ -90,7 +90,7 @@ contract StrategyManager is ReentrancyGuard {
         address user
     ) external view returns (uint256 _balance) {
         address strategy = _getStrategyAddress(_strategyName);
-        _balance = IStrategy(strategy).balance(user);
+        _balance = IStrategy(strategy).balanceOf(user);
     }
 
     function _getStrategyAddress(

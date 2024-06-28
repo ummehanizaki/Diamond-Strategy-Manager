@@ -77,19 +77,6 @@ async function testStrategy(
   const depositTxn1 = await diamondContract.deposit(strategyName, amount / 2);
   await depositTxn1.wait();
 
-  const shares = strategy.previewWithdraw(amount);
-  var amountToApprove = 0;
-  if (shares > amount) {
-    amountToApprove = shares;
-  } else {
-    amountToApprove = amount;
-  }
-  const approveVaultToken = await strategy.approve(
-    diamondContract.address,
-    amountToApprove
-  );
-
-  await approveVaultToken.wait();
   const withdrawTxn = await diamondContract.withdraw(strategyName, amount / 2);
   await withdrawTxn.wait();
   const withdrawTxn1 = await diamondContract.withdraw(strategyName, amount / 2);

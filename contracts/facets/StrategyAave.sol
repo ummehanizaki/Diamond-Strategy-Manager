@@ -61,10 +61,6 @@ contract StrategyAave is ERC4626, AccessControl {
         pool.withdraw(weth, amount, user);
     }
 
-    function balance(address user) public view returns (uint256) {
-        return balanceOf(user);
-    }
-
     fallback() external payable {}
 
     receive() external payable {}
