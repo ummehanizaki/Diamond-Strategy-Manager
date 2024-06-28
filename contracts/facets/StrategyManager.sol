@@ -15,20 +15,16 @@ contract StrategyManager is ReentrancyGuard {
     event StrategyAdded(string indexed strategyName, address indexed strategy);
     event StrategyRemoved(string indexed strategyName);
 
-    event Deposited(
+    event Deposit(
         string indexed strategyName,
         address indexed user,
-        uint256 amount
+        uint256 amount,
+        uint256 shares
     );
     event Withdraw(
         string indexed strategyName,
         address indexed user,
         uint256 amount
-    );
-    event Balance(
-        string indexed strategyName,
-        address indexed user,
-        uint256 balance
     );
 
     // Modifier to restrict access to only the owner (diamond contract)
@@ -66,25 +62,26 @@ contract StrategyManager is ReentrancyGuard {
     function deposit(
         string memory _strategyName,
         uint256 amount
-    ) external nonReentrant {
+    ) external nonReentrant onlyOwner {
         address strategy = _getStrategyAddress(_strategyName);
-        IERC20(IStrategy(strategy).weth()).transferFrom(
+        IStrategy strategyContract = IStrategy(strategy);
+        IERC20(strategyContract.weth()).transferFrom(
             msg.sender,
             strategy,
             amount
         );
-        IStrategy(strategy).deposit(amount, msg.sender);
-        emit Deposited(_strategyName, msg.sender, amount);
+        uint256 shares = strategyContract.deposit(amount, msg.sender);
+        emit Deposit(_strategyName, msg.sender, amount, shares);
     }
 
     // Function to withdraw funds from a strategy
     function withdraw(
         string memory _strategyName,
-        uint256 _amount
-    ) external nonReentrant {
+        uint256 amount
+    ) external nonReentrant onlyOwner {
         address strategy = _getStrategyAddress(_strategyName);
-        IStrategy(strategy).withdraw(msg.sender, _amount);
-        emit Withdraw(_strategyName, msg.sender, _amount);
+        IStrategy(strategy).withdraw(msg.sender, amount);
+        emit Withdraw(_strategyName, msg.sender, amount);
     }
 
     // Function to check the balance of a user in a strategy

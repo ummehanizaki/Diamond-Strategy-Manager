@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Interface for the strategy contracts
 
 interface IStrategy {
-    function deposit(uint256 amount, address user) external;
+    function deposit(uint256 amount, address user) external returns (uint256);
 
     function withdraw(address user, uint256 amount) external;
 
@@ -15,4 +15,8 @@ interface IStrategy {
     function weth() external view returns (address);
 
     function aWETH() external view returns (address);
+
+    function previewWithdraw(uint256 amount) external view returns (uint256);
+
+    function balanceOf(address user) external view returns (uint256);
 }

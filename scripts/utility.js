@@ -87,7 +87,6 @@ async function deployVault(depositToken) {
 async function deployStrategy(
   strategyName,
   PoolWETH,
-  vaultTokenAddress,
   poolToken,
   WETH,
   diamondContractAddress
@@ -95,7 +94,6 @@ async function deployStrategy(
   const Strategy = await ethers.getContractFactory(strategyName);
   const strategy = await Strategy.deploy(
     PoolWETH,
-    vaultTokenAddress,
     poolToken,
     WETH,
     diamondContractAddress

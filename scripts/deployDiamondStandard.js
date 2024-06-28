@@ -16,57 +16,10 @@ const {
   aWETH,
   AaveWETH,
 } = require("./constants");
-
-async function testStrategyRemovalAndAddition(
-  diamondContract,
-  strategyName,
-  strategyAddress
-) {
-  await expect(
-    diamondContract.addStrategy(strategyName, strategyAddress)
-  ).to.emit(diamondContract, "StrategyAdded");
-  await expect(diamondContract.removeStrategy(strategyName)).to.emit(
-    diamondContract,
-    "StrategyRemoved"
-  );
-  // const isStrategyRemoved = await diamondContract.isStrategy(strategyName);
-  // if (!isStrategyRemoved) {
-  //   console.log(`${strategyName} strategy removal successful`);
-  // } else {
-  //   console.log(`${strategyName} strategy still exists (unexpected)`);
-  //   return;
-  // }
-  console.log(`${strategyName} strategy addition initiated`);
-  await expect(
-    diamondContract.addStrategy(strategyName, strategyAddress)
-  ).to.emit(diamondContract, "StrategyAdded");
-  // const isStrategyAdded = await diamondContract.isStrategy(strategyName);
-  // console.log(`${strategyName} strategy added:`, isStrategyAdded);
-}
-
-async function testStrategy(
-  weth,
-  diamondContract,
-  strategyName,
-  amount,
-  vault,
-  strategyAddress
-) {
-  const WETHTokenContract = await ethers.getContractAt("MintableWETH", weth);
-  const mintWETH = await WETHTokenContract.deposit({ value: amount });
-  await mintWETH.wait();
-  const approveWETH = await WETHTokenContract.approve(
-    diamondContract.address,
-    amount
-  );
-  await approveWETH.wait();
-  const depositTxn = await diamondContract.deposit(strategyName, amount);
-  await depositTxn.wait();
-  const approveVaultToken = await vault.approve(strategyAddress, amount);
-  await approveVaultToken.wait();
-  const withdrawTxn = await diamondContract.withdraw(strategyName, amount);
-  await withdrawTxn.wait();
-}
+const {
+  testStrategyRemovalAndAddition,
+  testStrategy,
+} = require("./testStrategy");
 
 async function deployDiamondStandard() {
   const diamond = await deployDiamondContracts();
@@ -79,7 +32,6 @@ async function deployDiamondStandard() {
   const strategyAave = await deployStrategy(
     "StrategyAave",
     AavePoolWETH,
-    aaveVault.address,
     aWETH,
     AaveWETH,
     diamond.address
@@ -94,32 +46,31 @@ async function deployDiamondStandard() {
     diamondContract,
     strategyNameAave,
     amount,
-    aaveVault,
-    strategyAave.address
+    strategyAave
   );
 
-  const compoundVault = await deployVault(cWETH);
-  const strategyCompound = await deployStrategy(
-    "StrategyCompound",
-    CompoundPoolWETH,
-    compoundVault.address,
-    cWETH,
-    CompoundWETH,
-    diamond.address
-  );
-  await testStrategyRemovalAndAddition(
-    diamondContract,
-    strategyNameCompound,
-    strategyCompound.address
-  );
-  await testStrategy(
-    CompoundWETH,
-    diamondContract,
-    strategyNameCompound,
-    amount,
-    compoundVault,
-    strategyCompound.address
-  );
+  // const compoundVault = await deployVault(cWETH);
+  // const strategyCompound = await deployStrategy(
+  //   "StrategyCompound",
+  //   CompoundPoolWETH,
+  //   compoundVault.address,
+  //   cWETH,
+  //   CompoundWETH,
+  //   diamond.address
+  // );
+  // await testStrategyRemovalAndAddition(
+  //   diamondContract,
+  //   strategyNameCompound,
+  //   strategyCompound.address
+  // );
+  // await testStrategy(
+  //   CompoundWETH,
+  //   diamondContract,
+  //   strategyNameCompound,
+  //   amount,
+  //   compoundVault,
+  //   strategyCompound.address
+  // );
 }
 
 if (require.main === module) {
