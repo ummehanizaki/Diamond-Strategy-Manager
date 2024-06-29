@@ -116,7 +116,32 @@ async function deployDiamondContracts() {
   return diamond;
 }
 
+async function deployDiamondContractsForTest() {
+  const accounts = await ethers.getSigners();
+  const contractOwner = accounts[0];
+
+  const diamondCutFacet = await _deployDiamondCutFacet();
+
+  const diamond = await _deployDiamond(
+    contractOwner.address,
+    diamondCutFacet.address
+  );
+
+  const diamondInit = await _deployDiamondInit();
+
+  const cut = await _deployFacets();
+  await _initializeDiamond(cut, diamond, diamondInit);
+  const diamondLoupeFacet = await ethers.getContractAt(
+    "DiamondLoupeFacet",
+    diamond.address
+  );
+  console.log(await diamondLoupeFacet.facetAddresses());
+
+  return diamond;
+}
+
 module.exports = {
   deployStrategy,
   deployDiamondContracts,
+  deployDiamondContractsForTest,
 };
