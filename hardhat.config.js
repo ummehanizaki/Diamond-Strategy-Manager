@@ -2,7 +2,7 @@ require("@nomiclabs/hardhat-waffle");
 require("dotenv").config({ path: ".env" });
 require("@nomiclabs/hardhat-etherscan");
 
-const SEPOLIA_API_KEY_URL = process.env.SEPOLIA_API_KEY_URL;
+const SEPOLIA_API_KEY_URL = "https://eth.merkle.io";
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 
@@ -18,16 +18,7 @@ task("accounts", "Prints the list of accounts", async () => {
 
 module.exports = {
   solidity: {
-    compilers: [
-      { version: "0.8.20" }, // Existing compiler
-      { version: "0.8.0" }, // New compiler for specific files
-    ],
-  },
-  paths: {
-    sources: "./contracts",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts",
+    compilers: [{ version: "0.8.20" }],
   },
   networks: {
     hardhat: {
@@ -39,12 +30,6 @@ module.exports = {
         blockNumber: 20135534,
       },
     },
-    // sepolia: {
-    //   url: SEPOLIA_API_KEY_URL,
-    //   accounts: [PRIVATE_KEY],
-    //   apiKey: process.env.ETHERSCAN_API_KEY
-
-    // },
   },
   etherscan: {
     apiKey: {
