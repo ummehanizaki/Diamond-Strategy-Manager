@@ -1,7 +1,7 @@
 const { getSelectors, FacetCutAction } = require("./libraries/diamond.js");
 const { FacetNames } = require("./constants");
 
-async function deployFacet(name) {
+async function _deployFacet(name) {
   const Facet = await ethers.getContractFactory(name);
   const facet = await Facet.deploy();
   await facet.deployed();
@@ -13,17 +13,17 @@ async function deployFacet(name) {
   };
 }
 
-async function deployFacets() {
+async function _deployFacets() {
   console.log("Deploying facets");
   const cut = [];
   for (const name of FacetNames) {
-    const facet = await deployFacet(name);
+    const facet = await _deployFacet(name);
     cut.push(facet);
   }
   return cut;
 }
 
-async function deployDiamondCutFacet() {
+async function _deployDiamondCutFacet() {
   const DiamondCutFacet = await ethers.getContractFactory("DiamondCutFacet");
   const diamondCutFacet = await DiamondCutFacet.deploy();
   await diamondCutFacet.deployed();
@@ -31,7 +31,7 @@ async function deployDiamondCutFacet() {
   return diamondCutFacet;
 }
 
-async function deployDiamond(contractOwner, diamondCutFacetAddress) {
+async function _deployDiamond(contractOwner, diamondCutFacetAddress) {
   const Diamond = await ethers.getContractFactory("Diamond");
   const diamond = await Diamond.deploy(contractOwner, diamondCutFacetAddress);
   await diamond.deployed();
@@ -39,7 +39,7 @@ async function deployDiamond(contractOwner, diamondCutFacetAddress) {
   return diamond;
 }
 
-async function deployDiamondInit() {
+async function _deployDiamondInit() {
   const DiamondInit = await ethers.getContractFactory("DiamondInit");
   const diamondInit = await DiamondInit.deploy();
   await diamondInit.deployed();
@@ -47,7 +47,7 @@ async function deployDiamondInit() {
   return diamondInit;
 }
 
-async function deployStrategyManager() {
+async function _deployStrategyManager() {
   const StrategyManager = await ethers.getContractFactory("StrategyManager");
   const strategyManager = await StrategyManager.deploy();
   await strategyManager.deployed();
@@ -59,7 +59,7 @@ async function deployStrategyManager() {
   };
 }
 
-async function initializeDiamond(cut, diamond, diamondInit) {
+async function _initializeDiamond(cut, diamond, diamondInit) {
   console.log("Initializing Diamond Cut:");
   const diamondCut = await ethers.getContractAt("IDiamondCut", diamond.address);
   const functionCall = diamondInit.interface.encodeFunctionData("init");
@@ -99,31 +99,24 @@ async function deployDiamondContracts() {
   const accounts = await ethers.getSigners();
   const contractOwner = accounts[0];
 
-  const diamondCutFacet = await deployDiamondCutFacet();
+  const diamondCutFacet = await _deployDiamondCutFacet();
 
-  const diamond = await deployDiamond(
+  const diamond = await _deployDiamond(
     contractOwner.address,
     diamondCutFacet.address
   );
 
-  const diamondInit = await deployDiamondInit();
+  const diamondInit = await _deployDiamondInit();
 
-  const cut = await deployFacets();
-  const strategyManagerFacet = await deployStrategyManager();
+  const cut = await _deployFacets();
+  const strategyManagerFacet = await _deployStrategyManager();
   cut.push(strategyManagerFacet);
-  await initializeDiamond(cut, diamond, diamondInit);
+  await _initializeDiamond(cut, diamond, diamondInit);
 
   return diamond;
 }
 
 module.exports = {
-  deployFacet,
-  deployFacets,
-  deployStrategyManager,
-  initializeDiamond,
   deployStrategy,
-  deployDiamondCutFacet,
-  deployDiamond,
-  deployDiamondInit,
   deployDiamondContracts,
 };

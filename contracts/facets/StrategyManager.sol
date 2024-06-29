@@ -32,6 +32,14 @@ contract StrategyManager is ReentrancyGuard {
         _;
     }
 
+    modifier validStrategy(string memory _strategyName) {
+        require(
+            strategies[_strategyName] != address(0),
+            "Strategy does not exist"
+        );
+        _;
+    }
+
     function addStrategy(
         string memory _strategyName,
         address _strategyAddress
@@ -44,11 +52,9 @@ contract StrategyManager is ReentrancyGuard {
         emit StrategyAdded(_strategyName, _strategyAddress);
     }
 
-    function removeStrategy(string memory _strategyName) external onlyOwner {
-        require(
-            strategies[_strategyName] != address(0),
-            "Strategy does not exist"
-        );
+    function removeStrategy(
+        string memory _strategyName
+    ) external onlyOwner validStrategy(_strategyName) {
         strategies[_strategyName] = address(0);
         emit StrategyRemoved(_strategyName);
     }
@@ -56,23 +62,32 @@ contract StrategyManager is ReentrancyGuard {
     function deposit(
         string memory _strategyName,
         uint256 amount
-    ) external nonReentrant onlyOwner {
-        address strategy = _getStrategyAddress(_strategyName);
+    )
+        external
+        nonReentrant
+        validStrategy(_strategyName)
+        returns (uint256 shares)
+    {
+        require(amount > 0, "Deposit amount must be greater than zero");
+
+        address strategy = strategies[_strategyName];
         IStrategy strategyContract = IStrategy(strategy);
         IERC20(strategyContract.weth()).transferFrom(
             msg.sender,
             strategy,
             amount
         );
-        uint256 shares = strategyContract.deposit(amount, msg.sender);
+        shares = strategyContract.deposit(amount, msg.sender);
         emit Deposit(_strategyName, msg.sender, amount, shares);
     }
 
     function withdraw(
         string memory _strategyName,
         uint256 amount
-    ) external nonReentrant onlyOwner {
-        address strategy = _getStrategyAddress(_strategyName);
+    ) external nonReentrant validStrategy(_strategyName) {
+        require(amount > 0, "Withdraw amount must be greater than zero");
+
+        address strategy = strategies[_strategyName];
         IStrategy(strategy).withdraw(msg.sender, amount);
         emit Withdraw(_strategyName, msg.sender, amount);
     }
@@ -80,16 +95,8 @@ contract StrategyManager is ReentrancyGuard {
     function balance(
         string memory _strategyName,
         address user
-    ) external view returns (uint256) {
-        address strategy = _getStrategyAddress(_strategyName);
+    ) external view validStrategy(_strategyName) returns (uint256) {
+        address strategy = strategies[_strategyName];
         return IStrategy(strategy).balanceOf(user);
-    }
-
-    function _getStrategyAddress(
-        string memory _strategyName
-    ) private view returns (address) {
-        address strategyAddress = strategies[_strategyName];
-        require(strategyAddress != address(0), "Strategy does not exist");
-        return strategyAddress;
     }
 }

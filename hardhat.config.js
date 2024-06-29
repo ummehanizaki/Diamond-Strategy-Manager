@@ -23,6 +23,12 @@ module.exports = {
       { version: "0.8.0" }, // New compiler for specific files
     ],
   },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts",
+  },
   networks: {
     hardhat: {
       forking: {

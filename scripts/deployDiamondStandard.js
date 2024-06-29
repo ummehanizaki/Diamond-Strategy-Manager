@@ -1,6 +1,9 @@
 const { ethers } = require("hardhat");
+const {
+  deployStrategy,
+  deployDiamondContracts,
+} = require("./deploymentHelperFunctions");
 const { expect } = require("chai");
-const { deployStrategy, deployDiamondContracts } = require("./utility");
 const {
   strategyNameAave,
   strategyNameCompound,
@@ -12,10 +15,7 @@ const {
   aWETH,
   AaveWETH,
 } = require("./constants");
-const {
-  testStrategyRemovalAndAddition,
-  testStrategy,
-} = require("./testStrategy");
+const { testDiamondStandard } = require("./testDiamondStandard");
 
 async function deployDiamondStandard() {
   const diamond = await deployDiamondContracts();
@@ -31,17 +31,12 @@ async function deployDiamondStandard() {
     AaveWETH,
     diamond.address
   );
-  await testStrategyRemovalAndAddition(
-    diamondContract,
-    strategyNameAave,
-    strategyAave.address
-  );
-  await testStrategy(
+  await testDiamondStandard(
     AaveWETH,
     diamondContract,
     strategyNameAave,
-    amount,
-    strategyAave
+    strategyAave,
+    amount
   );
 
   const strategyCompound = await deployStrategy(
@@ -51,17 +46,12 @@ async function deployDiamondStandard() {
     CompoundWETH,
     diamond.address
   );
-  await testStrategyRemovalAndAddition(
-    diamondContract,
-    strategyNameCompound,
-    strategyCompound.address
-  );
-  await testStrategy(
+  await testDiamondStandard(
     CompoundWETH,
     diamondContract,
     strategyNameCompound,
-    amount,
-    strategyCompound
+    strategyCompound,
+    amount
   );
 }
 
@@ -75,8 +65,3 @@ if (require.main === module) {
 }
 
 exports.deployDiamondStandard = deployDiamondStandard;
-
-// The strategy deposits in the ETH deposit vault using the given amount and issues shares to user based on ERC4626.
-// Add any other necessary validations as required
-// Write tests
-// Modify the starter diamond stand contracts where adding a selector should replace if it already exists. If you look at the change modules functionality of diamond standard, it has different internal functions to add/replace/remove selectors. However, updating add to replace if exists would save us the call to replace specifically. This task checks how you can navigate other’s code.

@@ -55,35 +55,6 @@ async function testStrategyRemovalAndAddition(
   );
 }
 
-async function testStrategy(
-  weth,
-  diamondContract,
-  strategyName,
-  amount,
-  strategy
-) {
-  const WETHTokenContract = await ethers.getContractAt("MintableWETH", weth);
-  const mintWETH = await WETHTokenContract.deposit({ value: amount });
-  await mintWETH.wait();
-
-  const approveWETH = await WETHTokenContract.approve(
-    diamondContract.address,
-    amount
-  );
-  await approveWETH.wait();
-  const depositTxn = await diamondContract.deposit(strategyName, amount / 2);
-  await depositTxn.wait();
-
-  const depositTxn1 = await diamondContract.deposit(strategyName, amount / 2);
-  await depositTxn1.wait();
-
-  const withdrawTxn = await diamondContract.withdraw(strategyName, amount / 2);
-  await withdrawTxn.wait();
-  const withdrawTxn1 = await diamondContract.withdraw(strategyName, amount / 2);
-  await withdrawTxn1.wait();
-}
-
 module.exports = {
   testStrategyRemovalAndAddition,
-  testStrategy,
 };
