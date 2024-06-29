@@ -148,12 +148,18 @@ library LibDiamond {
             address oldFacetAddress = ds
                 .selectorToFacetAndPosition[selector]
                 .facetAddress;
-            require(
-                oldFacetAddress == address(0),
-                "LibDiamondCut: Can't add function that already exists"
-            );
-            addFunction(ds, selector, selectorPosition, _facetAddress);
-            selectorPosition++;
+            if (oldFacetAddress == address(0)) {
+                addFunction(ds, selector, selectorPosition, _facetAddress);
+                selectorPosition++;
+            } else {
+                require(
+                    oldFacetAddress != _facetAddress,
+                    "LibDiamondCut: Can't replace function with same function"
+                );
+                removeFunction(ds, oldFacetAddress, selector);
+                addFunction(ds, selector, selectorPosition, _facetAddress);
+                selectorPosition++;
+            }
         }
     }
 
