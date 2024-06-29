@@ -24,8 +24,8 @@ async function deployDiamondStandard() {
     diamond.address
   );
 
-  const strategyAave = await deployStrategy(
-    "StrategyAave",
+  const aaveETHDepositVault = await deployStrategy(
+    "AaveETHDepositVault",
     AavePoolWETH,
     aWETH,
     AaveWETH,
@@ -35,12 +35,12 @@ async function deployDiamondStandard() {
     AaveWETH,
     diamondContract,
     strategyNameAave,
-    strategyAave,
+    aaveETHDepositVault,
     amount
   );
 
-  const strategyCompound = await deployStrategy(
-    "StrategyCompound",
+  const compoundETHDepositVault = await deployStrategy(
+    "CompoundETHDepositVault",
     CompoundPoolWETH,
     cWETH,
     CompoundWETH,
@@ -50,7 +50,7 @@ async function deployDiamondStandard() {
     CompoundWETH,
     diamondContract,
     strategyNameCompound,
-    strategyCompound,
+    compoundETHDepositVault,
     amount
   );
 }
