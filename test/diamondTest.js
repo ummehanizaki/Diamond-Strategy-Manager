@@ -6,8 +6,20 @@ const {
   removeSelectors,
   findAddressPositionInFacets,
 } = require("../scripts/libraries/diamond.js");
-
 const {
+  strategyNameAave,
+  strategyNameCompound,
+  cWETH,
+  CompoundPoolWETH,
+  CompoundWETH,
+  amount,
+  AavePoolWETH,
+  aWETH,
+  AaveWETH,
+} = require("../scripts/constants.js");
+const {
+  deployStrategy,
+  deployDiamondContracts,
   deployDiamondContractsForTest,
 } = require("../scripts/deploymentHelperFunctions.js");
 const { assert } = require("chai");
@@ -39,6 +51,8 @@ describe("DiamondTest", async function () {
       "OwnershipFacet",
       diamondAddress
     );
+    diamond2 = await deployDiamondContracts();
+    diamondAddress2 = diamond2.address;
   });
 
   it("should have three facets -- call to facetAddresses function", async () => {
@@ -233,5 +247,154 @@ describe("DiamondTest", async function () {
       facets[findAddressPositionInFacets(addresses[3], facets)][1],
       getSelectors(StrategyManager)
     );
+  });
+
+  it("should add and remove strategies", async () => {
+    const diamondContract = await ethers.getContractAt(
+      "StrategyManager",
+      diamond2.address
+    );
+
+    const aaveETHDepositVault = await deployStrategy(
+      "AaveETHDepositVault",
+      AavePoolWETH,
+      aWETH,
+      AaveWETH,
+      diamond2.address
+    );
+    const txn = await diamondContract.addStrategy(
+      strategyNameAave,
+      aaveETHDepositVault.address
+    );
+    await txn.wait();
+
+    const addedStrategyAddress = await diamondContract.strategies(
+      strategyNameAave
+    );
+
+    assert.equal(addedStrategyAddress, aaveETHDepositVault.address);
+
+    const txn2 = await diamondContract.removeStrategy(strategyNameAave);
+    await txn2.wait();
+
+    const removedStrategyAddress = await diamondContract.strategies(
+      strategyNameAave
+    );
+
+    assert.equal(
+      removedStrategyAddress,
+      "0x0000000000000000000000000000000000000000"
+    );
+  });
+
+  it("should test deposit, withdraw and balance functions for Aave", async () => {
+    const diamondContract = await ethers.getContractAt(
+      "StrategyManager",
+      diamond2.address
+    );
+
+    const aaveETHDepositVault = await deployStrategy(
+      "AaveETHDepositVault",
+      AavePoolWETH,
+      aWETH,
+      AaveWETH,
+      diamond2.address
+    );
+    const txn = await diamondContract.addStrategy(
+      strategyNameAave,
+      aaveETHDepositVault.address
+    );
+    await txn.wait();
+
+    const WETHTokenContract = await ethers.getContractAt(
+      "MintableWETH",
+      AaveWETH
+    );
+    const mintWETH = await WETHTokenContract.deposit({ value: amount });
+    await mintWETH.wait();
+    const approveWETH = await WETHTokenContract.approve(
+      diamondContract.address,
+      amount
+    );
+    await approveWETH.wait();
+
+    var signer = await ethers.provider.getSigner();
+    user = await signer.getAddress();
+
+    const initialVaultTokenBalance = await diamondContract.balance(
+      strategyNameAave,
+      user
+    );
+    assert.equal(initialVaultTokenBalance, 0);
+    const initialWETHBalance = await WETHTokenContract.balanceOf(user);
+
+    const depositTxn = await diamondContract.deposit(strategyNameAave, amount);
+    await depositTxn.wait();
+
+    const afterDepositWETHBalance = await WETHTokenContract.balanceOf(user);
+    const afterDepositVaultTokenBalance = await diamondContract.balance(
+      strategyNameAave,
+      user
+    );
+
+    assert.equal(afterDepositWETHBalance, initialWETHBalance - amount);
+    assert.isAbove(afterDepositVaultTokenBalance, initialVaultTokenBalance);
+  });
+
+  it("should test deposit, withdraw and balance functions for Compound", async () => {
+    const diamondContract = await ethers.getContractAt(
+      "StrategyManager",
+      diamond2.address
+    );
+
+    const compoundETHDepositVault = await deployStrategy(
+      "CompoundETHDepositVault",
+      CompoundPoolWETH,
+      cWETH,
+      CompoundWETH,
+      diamond2.address
+    );
+    const txn = await diamondContract.addStrategy(
+      strategyNameCompound,
+      compoundETHDepositVault.address
+    );
+    await txn.wait();
+
+    const WETHTokenContract = await ethers.getContractAt(
+      "MintableWETH",
+      CompoundWETH
+    );
+    const mintWETH = await WETHTokenContract.deposit({ value: amount });
+    await mintWETH.wait();
+    const approveWETH = await WETHTokenContract.approve(
+      diamondContract.address,
+      amount
+    );
+    await approveWETH.wait();
+
+    var signer = await ethers.provider.getSigner();
+    user = await signer.getAddress();
+
+    const initialVaultTokenBalance = await diamondContract.balance(
+      strategyNameCompound,
+      user
+    );
+    assert.equal(initialVaultTokenBalance, 0);
+    const initialWETHBalance = await WETHTokenContract.balanceOf(user);
+
+    const depositTxn = await diamondContract.deposit(
+      strategyNameCompound,
+      amount
+    );
+    await depositTxn.wait();
+
+    const afterDepositWETHBalance = await WETHTokenContract.balanceOf(user);
+    const afterDepositVaultTokenBalance = await diamondContract.balance(
+      strategyNameCompound,
+      user
+    );
+
+    assert.equal(afterDepositWETHBalance, initialWETHBalance - amount);
+    assert.isAbove(afterDepositVaultTokenBalance, initialVaultTokenBalance);
   });
 });
