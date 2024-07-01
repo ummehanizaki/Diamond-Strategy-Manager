@@ -1,5 +1,15 @@
 const { expect } = require("chai");
-const { testStrategyRemovalAndAddition } = require("./testcaseHelperFunctions");
+async function addStrategy(diamondContract, strategyName, strategyAddress) {
+  txn = await diamondContract.addStrategy(strategyName, strategyAddress);
+  txn.wait();
+  const addedStrategyAddress = await diamondContract.strategies(strategyName);
+  if (addedStrategyAddress === strategyAddress) {
+    console.log(`${strategyName} strategy addition successful`);
+  } else {
+    console.error(`${strategyName} strategy addition failed (unexpected)`);
+    throw new Error("Strategy addition failed");
+  }
+}
 
 async function _testDeposit(
   tokenContract,
@@ -66,12 +76,6 @@ async function testDiamondStandard(
   strategy,
   amount
 ) {
-  await testStrategyRemovalAndAddition(
-    diamondContract,
-    strategyName,
-    strategy.address
-  );
-
   const WETHTokenContract = await ethers.getContractAt("MintableWETH", weth);
   const mintWETH = await WETHTokenContract.deposit({ value: amount });
   await mintWETH.wait();
@@ -88,7 +92,10 @@ async function testDiamondStandard(
   amount1 = amount / 4;
   amount2 = amount - amount1;
 
-  const initialVaultTokenBalance = await strategy.balanceOf(signer);
+  const initialVaultTokenBalance = await diamondContract.balance(
+    strategyName,
+    signer
+  );
   expect(initialVaultTokenBalance).to.be.equal(0);
 
   await _testDeposit(
@@ -127,10 +134,16 @@ async function testDiamondStandard(
     amount2
   );
 
-  const finalVaultTokenBalance = await strategy.balanceOf(signer);
+  const finalVaultTokenBalance = await diamondContract.balance(
+    strategyName,
+    signer
+  );
   expect(finalVaultTokenBalance).to.be.above(0);
 }
 
 module.exports = {
   testDiamondStandard,
+  _testDeposit,
+  _testWithdraw,
+  addStrategy,
 };

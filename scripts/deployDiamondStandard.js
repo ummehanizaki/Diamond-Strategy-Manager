@@ -15,7 +15,7 @@ const {
   aWETH,
   AaveWETH,
 } = require("./constants");
-const { testDiamondStandard } = require("./testDiamondStandard");
+const { testDiamondStandard, addStrategy } = require("./testDiamondStandard");
 
 async function deployDiamondStandard() {
   const diamond = await deployDiamondContracts();
@@ -31,6 +31,11 @@ async function deployDiamondStandard() {
     AaveWETH,
     diamond.address
   );
+  await addStrategy(
+    diamondContract,
+    strategyNameAave,
+    aaveETHDepositVault.address
+  );
   await testDiamondStandard(
     AaveWETH,
     diamondContract,
@@ -45,6 +50,11 @@ async function deployDiamondStandard() {
     cWETH,
     CompoundWETH,
     diamond.address
+  );
+  await addStrategy(
+    diamondContract,
+    strategyNameCompound,
+    compoundETHDepositVault.address
   );
   await testDiamondStandard(
     CompoundWETH,
