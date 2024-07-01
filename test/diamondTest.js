@@ -281,7 +281,7 @@ describe("DiamondTest", async function () {
     const diamondContract = await ethers.getContractAt(
       "StrategyManager",
       diamond2.address
-    );
+    ); // Deploy Aave strategy
 
     const aaveETHDepositVault = await deployStrategy(
       "AaveETHDepositVault",
@@ -290,37 +290,37 @@ describe("DiamondTest", async function () {
       AaveWETH,
       diamond2.address
     );
-    const txn = await diamondContract.addStrategy(
-      strategyNameAave,
-      aaveETHDepositVault.address
-    );
-    await txn.wait();
 
+    // Add Aave strategy
+    await (
+      await diamondContract.addStrategy(
+        strategyNameAave,
+        aaveETHDepositVault.address
+      )
+    ).wait();
+
+    // Verify strategy addition
     const addedStrategyAddress = await diamondContract.strategies(
       strategyNameAave
     );
-
     assert.equal(addedStrategyAddress, aaveETHDepositVault.address);
 
-    const txn2 = await diamondContract.removeStrategy(strategyNameAave);
-    await txn2.wait();
+    // Remove Aave strategy
+    await (await diamondContract.removeStrategy(strategyNameAave)).wait();
 
+    // Verify strategy removal
     const removedStrategyAddress = await diamondContract.strategies(
       strategyNameAave
     );
-
-    assert.equal(
-      removedStrategyAddress,
-      "0x0000000000000000000000000000000000000000"
-    );
+    assert.equal(removedStrategyAddress, ethers.constants.AddressZero);
   });
 
-  it("should test deposit, withdraw and balance functions for Aave", async () => {
+  it("should test deposit, withdraw, and balance functions for Aave", async () => {
     const diamondContract = await ethers.getContractAt(
       "StrategyManager",
       diamond2.address
     );
-    const [amount1, amount2] = [amount / 4, amount - amount / 4];
+    const [amount1, amount2] = [amount / 4, (3 * amount) / 4];
 
     const aaveETHDepositVault = await deployStrategy(
       "AaveETHDepositVault",
@@ -329,36 +329,34 @@ describe("DiamondTest", async function () {
       AaveWETH,
       diamond2.address
     );
-    const txn = await diamondContract.addStrategy(
-      strategyNameAave,
-      aaveETHDepositVault.address
-    );
-    await txn.wait();
+
+    await (
+      await diamondContract.addStrategy(
+        strategyNameAave,
+        aaveETHDepositVault.address
+      )
+    ).wait();
 
     const WETHTokenContract = await ethers.getContractAt(
       "MintableWETH",
       AaveWETH
     );
-    const mintWETH = await WETHTokenContract.deposit({ value: amount });
-    await mintWETH.wait();
-    const approveWETH = await WETHTokenContract.approve(
-      diamondContract.address,
-      amount
-    );
-    await approveWETH.wait();
+    await (await WETHTokenContract.deposit({ value: amount })).wait();
+    await (
+      await WETHTokenContract.approve(diamondContract.address, amount)
+    ).wait();
 
-    var signer = await ethers.provider.getSigner();
-    user = await signer.getAddress();
+    const signer = await ethers.provider.getSigner();
+    const user = await signer.getAddress();
 
+    const initialWETHBalance = await WETHTokenContract.balanceOf(user);
     const initialVaultTokenBalance = await diamondContract.balance(
       strategyNameAave,
       user
     );
     assert.equal(initialVaultTokenBalance, 0);
-    const initialWETHBalance = await WETHTokenContract.balanceOf(user);
 
-    assert.equal(initialVaultTokenBalance, 0);
-
+    // Deposit amount1
     await (await diamondContract.deposit(strategyNameAave, amount1)).wait();
     await checkBalances(
       WETHTokenContract,
@@ -374,6 +372,8 @@ describe("DiamondTest", async function () {
       strategyNameAave,
       user
     );
+
+    // Deposit amount2
     await (await diamondContract.deposit(strategyNameAave, amount2)).wait();
     await checkBalances(
       WETHTokenContract,
@@ -390,6 +390,7 @@ describe("DiamondTest", async function () {
       user
     );
 
+    // Withdraw quarter amount
     const quarterAmount = amount / 4;
     await (
       await diamondContract.withdraw(strategyNameAave, quarterAmount)
@@ -409,6 +410,7 @@ describe("DiamondTest", async function () {
       user
     );
 
+    // Withdraw remaining amount
     const remainingAmount = amount - quarterAmount;
     await (
       await diamondContract.withdraw(strategyNameAave, remainingAmount)
@@ -422,19 +424,22 @@ describe("DiamondTest", async function () {
       vaultTokenBalanceAfterWithdraw1,
       false
     );
+
     const vaultTokenBalanceAfterWithdraw2 = await diamondContract.balance(
       strategyNameAave,
       user
     );
+
+    // Remaining amount of shares that is the ROI for the user
     assert.isAbove(vaultTokenBalanceAfterWithdraw2, 0);
   });
 
-  it("should test deposit, withdraw and balance functions for Compound", async () => {
+  it("should test deposit, withdraw, and balance functions for Compound", async () => {
     const diamondContract = await ethers.getContractAt(
       "StrategyManager",
       diamond2.address
     );
-    const [amount1, amount2] = [amount / 4, amount - amount / 4];
+    const [amount1, amount2] = [amount / 4, (3 * amount) / 4];
 
     const compoundETHDepositVault = await deployStrategy(
       "CompoundETHDepositVault",
@@ -463,13 +468,14 @@ describe("DiamondTest", async function () {
     const signer = await ethers.provider.getSigner();
     const user = await signer.getAddress();
 
+    const initialWETHBalance = await WETHTokenContract.balanceOf(user);
     const initialVaultTokenBalance = await diamondContract.balance(
       strategyNameCompound,
       user
     );
     assert.equal(initialVaultTokenBalance, 0);
-    const initialWETHBalance = await WETHTokenContract.balanceOf(user);
 
+    // Deposit amount1
     await (await diamondContract.deposit(strategyNameCompound, amount1)).wait();
     await checkBalances(
       WETHTokenContract,
@@ -486,6 +492,7 @@ describe("DiamondTest", async function () {
       user
     );
 
+    // Deposit amount2
     await (await diamondContract.deposit(strategyNameCompound, amount2)).wait();
     await checkBalances(
       WETHTokenContract,
@@ -502,6 +509,7 @@ describe("DiamondTest", async function () {
       user
     );
 
+    // Withdraw quarter amount
     const quarterAmount = amount / 4;
     await (
       await diamondContract.withdraw(strategyNameCompound, quarterAmount)
@@ -521,6 +529,7 @@ describe("DiamondTest", async function () {
       user
     );
 
+    // Withdraw remaining amount
     const remainingAmount = amount - quarterAmount;
     await (
       await diamondContract.withdraw(strategyNameCompound, remainingAmount)
@@ -534,6 +543,8 @@ describe("DiamondTest", async function () {
       vaultTokenBalanceAfterWithdraw1,
       false
     );
+
+    // Remaining amount of shares that is the ROI for the user
     const vaultTokenBalanceAfterWithdraw2 = await diamondContract.balance(
       strategyNameCompound,
       user

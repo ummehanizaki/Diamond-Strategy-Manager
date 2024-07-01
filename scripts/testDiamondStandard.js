@@ -77,73 +77,55 @@ async function testDiamondStandard(
   amount
 ) {
   const WETHTokenContract = await ethers.getContractAt("MintableWETH", weth);
-  const mintWETH = await WETHTokenContract.deposit({ value: amount });
-  await mintWETH.wait();
-  const approveWETH = await WETHTokenContract.approve(
-    diamondContract.address,
-    amount
-  );
-  await approveWETH.wait();
 
-  var signer = await ethers.provider.getSigner();
-  signer = await signer.getAddress();
-  console.log(signer);
+  // Mint WETH
+  await (await WETHTokenContract.deposit({ value: amount })).wait();
 
-  amount1 = amount / 4;
-  amount2 = amount - amount1;
+  // Approve WETH
+  await (
+    await WETHTokenContract.approve(diamondContract.address, amount)
+  ).wait();
 
+  // Get signer address
+  const signerAddress = await (await ethers.provider.getSigner()).getAddress();
+  console.log(signerAddress);
+
+  // Check initial balance
   const initialVaultTokenBalance = await diamondContract.balance(
     strategyName,
-    signer
+    signerAddress
   );
-  expect(initialVaultTokenBalance).to.be.equal(0);
+  expect(initialVaultTokenBalance).to.equal(0);
 
+  // Test deposit
   await _testDeposit(
     WETHTokenContract,
     diamondContract,
     strategyName,
     strategy,
-    signer,
-    amount1
+    signerAddress,
+    amount
   );
 
-  await _testDeposit(
-    WETHTokenContract,
-    diamondContract,
-    strategyName,
-    strategy,
-    signer,
-    amount2
-  );
-
+  // Test withdraw
   await _testWithdraw(
     WETHTokenContract,
     diamondContract,
     strategyName,
     strategy,
-    signer,
-    amount1
+    signerAddress,
+    amount
   );
 
-  await _testWithdraw(
-    WETHTokenContract,
-    diamondContract,
-    strategyName,
-    strategy,
-    signer,
-    amount2
-  );
-
+  // Check final balance
   const finalVaultTokenBalance = await diamondContract.balance(
     strategyName,
-    signer
+    signerAddress
   );
   expect(finalVaultTokenBalance).to.be.above(0);
 }
 
 module.exports = {
   testDiamondStandard,
-  _testDeposit,
-  _testWithdraw,
   addStrategy,
 };

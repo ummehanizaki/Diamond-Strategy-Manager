@@ -3,7 +3,6 @@ const {
   deployStrategy,
   deployDiamondContracts,
 } = require("./deploymentHelperFunctions");
-const { expect } = require("chai");
 const {
   strategyNameAave,
   strategyNameCompound,
@@ -23,7 +22,6 @@ async function deployDiamondStandard() {
     "StrategyManager",
     diamond.address
   );
-
   const aaveETHDepositVault = await deployStrategy(
     "AaveETHDepositVault",
     AavePoolWETH,
@@ -36,14 +34,6 @@ async function deployDiamondStandard() {
     strategyNameAave,
     aaveETHDepositVault.address
   );
-  await testDiamondStandard(
-    AaveWETH,
-    diamondContract,
-    strategyNameAave,
-    aaveETHDepositVault,
-    amount
-  );
-
   const compoundETHDepositVault = await deployStrategy(
     "CompoundETHDepositVault",
     CompoundPoolWETH,
@@ -56,11 +46,20 @@ async function deployDiamondStandard() {
     strategyNameCompound,
     compoundETHDepositVault.address
   );
+
+  //Optional Basic Testing
   await testDiamondStandard(
     CompoundWETH,
     diamondContract,
     strategyNameCompound,
     compoundETHDepositVault,
+    amount
+  );
+  await testDiamondStandard(
+    AaveWETH,
+    diamondContract,
+    strategyNameAave,
+    aaveETHDepositVault,
     amount
   );
 }
