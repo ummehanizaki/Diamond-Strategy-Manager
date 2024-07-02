@@ -1,5 +1,5 @@
 const { getSelectors, FacetCutAction } = require("./libraries/diamond.js");
-const { FacetNames } = require("./constants");
+const { FacetNames } = require("./constants.js");
 
 async function _deployFacet(name) {
   const Facet = await ethers.getContractFactory(name);

@@ -21,7 +21,7 @@ const {
   deployStrategy,
   deployDiamondContracts,
   deployDiamondContractsForTest,
-} = require("../scripts/deploymentHelperFunctions.js");
+} = require("../scripts/helper.js");
 const { assert } = require("chai");
 
 const checkBalances = async (
@@ -550,5 +550,33 @@ describe("DiamondTest", async function () {
       user
     );
     assert.isAbove(vaultTokenBalanceAfterWithdraw2, 0);
+  });
+
+  it("Using add to replace current facet with a new one", async () => {
+    const StrategyManager = await ethers.getContractFactory("StrategyManager");
+    const strategyManager = await StrategyManager.deploy();
+    await strategyManager.deployed();
+    addresses.push(strategyManager.address);
+    const selectors = getSelectors(strategyManager);
+    tx = await diamondCutFacet.diamondCut(
+      [
+        {
+          facetAddress: strategyManager.address,
+          action: FacetCutAction.Add,
+          functionSelectors: selectors,
+        },
+      ],
+      ethers.constants.AddressZero,
+      "0x",
+      { gasLimit: 800000 }
+    );
+    receipt = await tx.wait();
+    if (!receipt.status) {
+      throw Error(`Diamond upgrade failed: ${tx.hash}`);
+    }
+    result = await diamondLoupeFacet.facetFunctionSelectors(
+      strategyManager.address
+    );
+    assert.sameMembers(result, selectors);
   });
 });

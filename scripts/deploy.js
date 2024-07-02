@@ -1,8 +1,5 @@
 const { ethers } = require("hardhat");
-const {
-  deployStrategy,
-  deployDiamondContracts,
-} = require("./deploymentHelperFunctions");
+const { deployStrategy, deployDiamondContracts } = require("./helper");
 const {
   strategyNameAave,
   strategyNameCompound,
@@ -14,9 +11,9 @@ const {
   aWETH,
   AaveWETH,
 } = require("./constants");
-const { testDiamondStandard, addStrategy } = require("./testDiamondStandard");
+const { testDiamondStandard, addStrategy } = require("./test.js");
 
-async function deployDiamondStandard() {
+async function deploy() {
   const diamond = await deployDiamondContracts();
   const diamondContract = await ethers.getContractAt(
     "StrategyManager",
@@ -65,7 +62,7 @@ async function deployDiamondStandard() {
 }
 
 if (require.main === module) {
-  deployDiamondStandard()
+  deploy()
     .then(() => process.exit(0))
     .catch((error) => {
       console.error(error);
@@ -73,4 +70,4 @@ if (require.main === module) {
     });
 }
 
-exports.deployDiamondStandard = deployDiamondStandard;
+exports.deploy = deploy;
