@@ -91,7 +91,7 @@ async function deployStrategy(
     diamondContractAddress
   );
   await strategy.deployed();
-  console.log("Strategy deployed:", strategy.address);
+  // console.log("Strategy deployed:", strategy.address);
   return strategy;
 }
 
