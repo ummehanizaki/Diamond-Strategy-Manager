@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 interface ICompoundPool {
@@ -7,7 +9,10 @@ interface ICompoundPool {
 
     function balanceOf(address owner) external view returns (uint256);
 
-    function approve(address user, uint256 amount) external view returns (uint256);
+    function approve(
+        address user,
+        uint256 amount
+    ) external view returns (uint256);
 
     function allow(address user, bool amount) external;
 }
