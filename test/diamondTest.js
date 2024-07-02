@@ -19,7 +19,6 @@ const {
 } = require("../scripts/constants.js");
 const {
   deployStrategy,
-  deployDiamondContracts,
   deployDiamondContractsForTest,
 } = require("../scripts/helper.js");
 const { assert } = require("chai");
@@ -79,8 +78,6 @@ describe("DiamondTest", async function () {
       "OwnershipFacet",
       diamondAddress
     );
-    diamond2 = await deployDiamondContracts();
-    diamondAddress2 = diamond2.address;
   });
 
   it("should have three facets -- call to facetAddresses function", async () => {
@@ -280,7 +277,7 @@ describe("DiamondTest", async function () {
   it("should add and remove strategies", async () => {
     const diamondContract = await ethers.getContractAt(
       "StrategyManager",
-      diamond2.address
+      diamond.address
     ); // Deploy Aave strategy
 
     const aaveETHDepositVault = await deployStrategy(
@@ -288,7 +285,7 @@ describe("DiamondTest", async function () {
       AavePoolWETH,
       aWETH,
       AaveWETH,
-      diamond2.address
+      diamond.address
     );
 
     // Add Aave strategy
@@ -318,7 +315,7 @@ describe("DiamondTest", async function () {
   it("should test deposit, withdraw, and balance functions for Aave", async () => {
     const diamondContract = await ethers.getContractAt(
       "StrategyManager",
-      diamond2.address
+      diamond.address
     );
     const [amount1, amount2] = [amount / 4, (3 * amount) / 4];
 
@@ -327,7 +324,7 @@ describe("DiamondTest", async function () {
       AavePoolWETH,
       aWETH,
       AaveWETH,
-      diamond2.address
+      diamond.address
     );
 
     await (
@@ -437,7 +434,7 @@ describe("DiamondTest", async function () {
   it("should test deposit, withdraw, and balance functions for Compound", async () => {
     const diamondContract = await ethers.getContractAt(
       "StrategyManager",
-      diamond2.address
+      diamond.address
     );
     const [amount1, amount2] = [amount / 4, (3 * amount) / 4];
 
@@ -446,7 +443,7 @@ describe("DiamondTest", async function () {
       CompoundPoolWETH,
       cWETH,
       CompoundWETH,
-      diamond2.address
+      diamond.address
     );
 
     await (

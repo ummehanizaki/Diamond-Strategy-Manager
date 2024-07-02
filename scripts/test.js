@@ -15,7 +15,6 @@ async function _testDeposit(
   tokenContract,
   diamondContract,
   strategyName,
-  strategy,
   user,
   amount
 ) {
@@ -42,7 +41,6 @@ async function _testWithdraw(
   tokenContract,
   diamondContract,
   strategyName,
-  strategy,
   user,
   amount
 ) {
@@ -88,7 +86,6 @@ async function testDiamondStandard(
 
   // Get signer address
   const signerAddress = await (await ethers.provider.getSigner()).getAddress();
-  console.log(signerAddress);
 
   // Check initial balance
   const initialVaultTokenBalance = await diamondContract.balance(
@@ -102,7 +99,6 @@ async function testDiamondStandard(
     WETHTokenContract,
     diamondContract,
     strategyName,
-    strategy,
     signerAddress,
     amount
   );
@@ -112,7 +108,6 @@ async function testDiamondStandard(
     WETHTokenContract,
     diamondContract,
     strategyName,
-    strategy,
     signerAddress,
     amount
   );
